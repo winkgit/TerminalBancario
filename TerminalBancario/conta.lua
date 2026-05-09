@@ -95,21 +95,36 @@ end
 function conta:levantar(acc, decrease) -- getter 1
 
     local bank
+    local file = {}
 
     -- decrease the value of 'bank_' (NON-PERMANENT)
     for line in io.lines(path) do
 
-        if line:sub(1, #("bank_" .. acc)) == "bank_" .. acc then
+        if line ~= "" then
+            
+            if line:sub(1, #("bank_" .. acc)) == "bank_" .. acc then
 
-            bank = tonumber(line:match("(%d+)"))
+                bank = tonumber(line:match("(%d+)")) - decrease
+                bank = "bank_".. acc.. ": ".. bank
 
-        elseif not line then return false, "ERROR_GENERIC" end
+                table.insert(file, bank)
+
+            else
+                
+                table.insert(file, line)
+
+            end
+
+        end
 
     end
 
-        bank = bank - decrease
+    local path = assert(io.open(path, "w"))
 
-    return bank
+    path:write(table.concat(file, "\n"))
+
+    if #file > 0 then path:write("\n"):close(); return true, "SUCCESS_GENERIC"
+    else return false, "ERROR_GENERIC" end
 
 end
 
