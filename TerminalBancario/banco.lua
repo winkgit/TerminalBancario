@@ -63,7 +63,7 @@ function banco:deletarConta(acc)
 
     for line in io.lines(path) do
 
-        if skip then -- PUTA QUE PARIU, EU SOU UM JUMENTO CARA.... CUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+        if skip then -- genial
 
             if line == "" then
 
@@ -84,13 +84,14 @@ function banco:deletarConta(acc)
 
     end
 
-    -- analisar daqui para baixo
-    local path = assert(io.open(path, "w"))
+    if not found then return false, "Account does not exist!" end
 
+    local path = assert(io.open(path, "w"))
     path:write(table.concat(file, "\n"))
 
-    if not found then return false, "Account does not exist!"
-    elseif #file > 0 then path:write("\n"):close(); return true, "Account deleted successfully!" end
+    if #file > 0 then path:write("\n"):close(); return true, "Account deleted successfully!" end
+
+    path:close()
 
 end
 
