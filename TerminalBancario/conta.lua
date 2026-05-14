@@ -28,7 +28,7 @@ function conta:menu(acc, paw)
         print("Insert value to pull:")
         local input = tonumber(io.read())
 
-        print(conta:levantar(acc, input))
+        local res, msg = conta:levantar(acc, input); print(msg)
 
     end
 
@@ -37,7 +37,7 @@ function conta:menu(acc, paw)
         print("Insert value to store:")
         local input = tonumber(io.read())
 
-        print(conta:depositar(acc, input))
+        local res, msg = conta:depositar(acc, input); print(msg)
 
     end
 
@@ -66,45 +66,26 @@ function conta:verSaldo(acc) -- checa o saldo/bank (getter 2)
 
         end
 
-        end
-
-end
-
-function conta:depositar(acc, money) -- setter
--- INCOMPLETO, REVISAR CÓDIGO (?)
-    local bank
-
-    -- set bank to the value of 'bank_'
-    for line in io.lines(path) do
-
-        if line:sub(1, #("bank_" .. acc)) == "bank_" .. acc then
-
-            bank = tonumber(line:match("(%d+)"))
-
-        elseif not line then return false, "ERROR_GENERIC" end
-
     end
 
-    bank = bank + money
-
-    return bank
-
 end
 
-
-function conta:levantar(acc, decrease) -- getter 1
+function conta:depositar(acc, increase) -- setter
 
     local bank
     local file = {}
+    local found = false
 
-    -- decrease the value of 'bank_' (NON-PERMANENT)
+    -- increases the value of 'bank_'
     for line in io.lines(path) do
 
         if line ~= "" then
+
+            found = true
             
             if line:sub(1, #("bank_" .. acc)) == "bank_" .. acc then
 
-                bank = tonumber(line:match("(%d+)")) - decrease
+                bank = tonumber(line:match("(%d+)")) +increase
                 bank = "bank_".. acc.. ": ".. bank
 
                 table.insert(file, bank)
@@ -119,12 +100,56 @@ function conta:levantar(acc, decrease) -- getter 1
 
     end
 
-    local path = assert(io.open(path, "w"))
+    if not found then return false, "ERROR_GENERIC" end
 
+    local path = assert(io.open(path, "w"))
     path:write(table.concat(file, "\n"))
 
-    if #file > 0 then path:write("\n"):close(); return true, "SUCCESS_GENERIC"
-    else return false, "ERROR_GENERIC" end
+    if #file > 0 then path:write("\n"):close(); return true, "SUCCESS_GENERIC" end
+
+    path:close()
+
+end
+
+
+function conta:levantar(acc, decrease) -- getter 1
+
+    local bank
+    local file = {}
+    local found = false
+
+    -- decreases the value of 'bank_'
+    for line in io.lines(path) do
+
+        if line ~= "" then
+
+            found = true
+            
+            if line:sub(1, #("bank_" .. acc)) == "bank_" .. acc then
+
+                bank = tonumber(line:match("(%d+)")) -decrease
+                bank = "bank_".. acc.. ": ".. bank
+
+                table.insert(file, bank)
+
+            else
+                
+                table.insert(file, line)
+
+            end
+
+        end
+
+    end
+
+    if not found then return false, "ERROR_GENERIC" end
+
+    local path = assert(io.open(path, "w"))
+    path:write(table.concat(file, "\n"))
+
+    if #file > 0 then path:write("\n"):close(); return true, "SUCCESS_GENERIC" end
+
+    path:close()
 
 end
 
