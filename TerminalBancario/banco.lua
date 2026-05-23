@@ -1,4 +1,9 @@
 -- backend
+-- ISSO DEVE CARREGAR A CONTA E PASSAR SEUS DADOS PARA CONTA.LUA
+-- DE ACORDO COM AS INSTRUÇÕES, SOMENTE BANCO.LUA PODE INTERAGIR COM CONTAS.TXT
+
+-- IMPORTANTE: O MÉTODO ATUAL USADO PARA SALVAR AS CONTAS NÃO É IDEAL: CADA CONTA POSSUÍ SEU BLOCO COM SUAS PROPRIEDADES. BLOCOS SÃO SEPARADOS POR LINHAS VAZIAS.
+-- Mesmo assim, vou usar esse método ruim para motivos de APRENDIZADO! Veja o fim desse código, por conta disso que a implementação se torna ineficiente.
 
 package.path = package.path .. ";/home/poweruser/lua/TerminalBancario/?.lua"
 local mConta = require("conta")
@@ -8,6 +13,27 @@ local path = "/home/poweruser/lua/contas.txt"
 
 function banco.criarConta(acc, paw, mon) -- conta, senha, money
 
+    local newname
+
+    -- built-in duplicated account names checker. might be better to create a closure for this?
+    --@INFO: THIS IS COMPACT AS FUCK.
+    for line in io.lines(path) do
+
+        if line:sub(1, #("name_".. acc)) == ("name_".. acc) then
+
+            repeat
+
+                print("\nAccount with that user name already exists. Please insert a different user name:")
+                newname = io.read()
+
+            until newname ~= acc; return newname
+
+        end
+
+    end
+
+    if not paw then return end
+
     local path = assert(io.open(path, "a+")); io.output(path)
 
     local userinfo = ("name_".. acc.. "\npassword_".. acc.. ": ".. paw.. "\nbank_".. acc.. ": ".. mon.. "\n\n")
@@ -16,46 +42,52 @@ function banco.criarConta(acc, paw, mon) -- conta, senha, money
 
 end
 
-function banco.acessarConta(acc, paw)
+function banco.acessarConta(acc, paw) -- LOADS ACCOUNT'S CREDENTIALS WITH CONTA:MENU
 
-    local path = assert(io.open(path, "a+")); io.output(path); io.input(path)
+    local propmatch
+    local foundName, foundPassowrd, money = false, false, nil
 
-    local check1, check2 = false, false
+    for line in io.lines(path) do
 
-    for line in io.lines() do
+        propmatch = ("name_".. acc)
 
-        if line:sub(-#acc) == acc then
+        if line:sub(1, #propmatch) == propmatch then -- NAME FIRST
+            
+            foundName = true
 
-            check1 = true
+        end
 
-        elseif line and not check1 then
+        propmatch = ("password_".. acc.. ": ".. paw)
 
-            return false, "Account does not exist!"
+        if line:sub(1, #propmatch) == propmatch then -- PASSWORD SECOND
 
-        elseif line:sub(-#paw) == paw then
+            foundPassowrd = true
 
-            check2 = true
+        end
+
+        if line:sub(1, #("bank_".. acc)) == ("bank_".. acc) then -- MONEY LAST
+
+            money = tonumber(line:match("(%d+)")) --@FIXME: MUST HANDLE NUMBERS IN ACCOUNT'S NAME
 
         end
 
     end
 
-    io.input(io.stdin) -- ENTENDER POR QUE ESSA MERDA CAUSA PROBLEMAS SE A GENTE REMOVER ESSAS DUAS LINHAS
-    io.output(io.stdout)
+    if not foundName then return false, "Account doesn't exist!" end
 
-    if check2 then
+    if foundPassowrd then
 
-        os.execute("clear"); return true, "Account login successful!", mConta:menu(acc, paw)
+        os.execute("clear"); mConta:menu(acc, paw, money) -- PASSES CREDENTIALS TO MENU, MENU LOADS THEM
 
-    elseif not check2 then
+    elseif not foundPassowrd then
 
-        return false, "Wrong password, please try again."
+        return false, "Wrong password, please try again." -- reminder: remove the string, keep the boolean
     
     end
 
 end
 
-function banco:deletarConta(acc)
+function banco.deletarConta(acc)
 
     local file = {}
     local skip = false
@@ -63,7 +95,7 @@ function banco:deletarConta(acc)
 
     for line in io.lines(path) do
 
-        if skip then -- genial
+        if skip then
 
             if line == "" then
 
@@ -92,6 +124,23 @@ function banco:deletarConta(acc)
     if #file > 0 then path:write("\n"):close(); return true, "Account deleted successfully!" end
 
     path:close()
+
+end
+
+-- Objetivo: Persistir (salvar) todas as contas existentes no arquivo contas.txt.
+function banco.salvarContas()
+
+
+
+
+end
+
+-- Objetivo: Carregar as contas do arquivo contas.txt quando o programa inicia. Se o arquivo não existir, cria um novo (vazio).
+function banco.carregarOuCriar()
+
+
+
+
 
 end
 
