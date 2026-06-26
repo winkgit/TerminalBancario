@@ -1,7 +1,9 @@
 -- interface
 
-package.path = package.path .. ";/home/poweruser/lua/TerminalBancario/?.lua"
+package.path = package.path .. ";;" .. debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "?.lua"
 local mBank = require("banco")
+
+local contas = mBank.carregarOuCriar()
 
 local function mainmenu()
 
